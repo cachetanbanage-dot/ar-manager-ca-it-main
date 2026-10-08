@@ -2,7 +2,9 @@
 // customer, overdue invoices and what needs attention, all as at D.
 import Link from 'next/link';
 import { Suspense } from 'react';
+import { ActionForm } from '@/components/ActionForm';
 import { Label, SectionTitle, Td, Th } from '@/components/ui';
+import { markFollowUpDone } from '@/lib/actions/notes';
 import { loadArData } from '@/lib/ar/load';
 import { BUCKETS } from '@/lib/ar/positions';
 import { hrefWithAsOf } from '@/lib/asof';
@@ -147,6 +149,7 @@ async function Overview({ searchParams }: { searchParams: PageProps<'/'>['search
                   <span className="text-slate-500">{formatDate(f.note.followUpDate)}</span>{' '}
                   <Link href={link(`/customers/${f.customer.id}`)} className="text-blue-700 hover:underline">{f.customer.name}</Link>
                   {' '}— {f.note.body}
+                  <ActionForm action={markFollowUpDone.bind(null, f.note.id)} submitLabel="Mark done" className="mt-1" />
                 </li>
               ))}
             </Attention>

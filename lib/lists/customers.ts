@@ -37,7 +37,10 @@ export function customerListRows(data: ArData, asOf: string, opts: CustomerListO
   return sortRows(rows, CUSTOMER_SORTS[sort] ?? CUSTOMER_SORTS.code, dir);
 }
 
-export interface NoteRow { note: Note; invoiceNo: string | null; followUpDue: boolean; promiseStatus: PromiseStatus | null }
+export interface NoteRow {
+  note: Note; invoiceNo: string | null; followUpDue: boolean;
+  promiseStatus: PromiseStatus | null; promiseReceived: Paise | null; // R16, as at the date
+}
 
 export interface CustomerDetail {
   position: CustomerListRow;
@@ -51,7 +54,7 @@ export function customerDetail(data: ArData, customerId: number, asOf: string): 
   const pos = customerPositions(data, asOf).find((p) => p.customer.id === customerId);
   if (!pos) return null;
   const invoiceNo = new Map(data.invoices.map((i) => [i.id, i.invoiceNo]));
-  const promises = new Map(promiseStatuses(data, asOf).map((p) => [p.note.id, p.status]));
+  const promises = new Map(promiseStatuses(data, asOf).map((p) => [p.note.id, p]));
   const due = new Set(followUpsDue(data, asOf).map((f) => f.note.id));
 
   return {
@@ -74,7 +77,8 @@ export function customerDetail(data: ArData, customerId: number, asOf: string): 
         note,
         invoiceNo: note.invoiceId === null ? null : invoiceNo.get(note.invoiceId) ?? null,
         followUpDue: due.has(note.id),
-        promiseStatus: promises.get(note.id) ?? null,
+        promiseStatus: promises.get(note.id)?.status ?? null,
+        promiseReceived: promises.get(note.id)?.received ?? null,
       })),
   };
 }

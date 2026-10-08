@@ -7,6 +7,7 @@ import { ButtonLink, InvoiceStatusCell, Label, SectionTitle, StatusBadge, Td, Th
 import { BUCKETS } from '@/lib/ar/positions';
 import { loadArData } from '@/lib/ar/load';
 import { setCustomerActive } from '@/lib/actions/customers';
+import { markFollowUpDone } from '@/lib/actions/notes';
 import { deleteReceipt } from '@/lib/actions/receipts';
 import { ActionForm } from '@/components/ActionForm';
 import { hrefWithAsOf } from '@/lib/asof';
@@ -157,10 +158,13 @@ async function CustomerView({ params, searchParams }: Props) {
         </p>
       )}
 
-      <SectionTitle>Notes</SectionTitle>
+      <div className="mt-8 mb-2 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Notes</h2>
+        <ButtonLink href={link(`/notes/new?customer=${c.id}`)}>Add note</ButtonLink>
+      </div>
       {notes.length === 0 && <p className="text-sm text-slate-500">No notes as at {formatDate(asof)}.</p>}
       <ol className="space-y-3">
-        {notes.map(({ note: n, invoiceNo, followUpDue, promiseStatus }) => (
+        {notes.map(({ note: n, invoiceNo, followUpDue, promiseStatus, promiseReceived }) => (
           <li key={n.id} className="border-l-2 border-slate-300 pl-3 text-sm">
             <p className="text-slate-500">
               {formatDate(n.noteDate)} · {n.noteType}
@@ -168,14 +172,16 @@ async function CustomerView({ params, searchParams }: Props) {
             </p>
             <p>{n.body}</p>
             {n.followUpDate && (
-              <p className="text-slate-600">
-                Follow up {formatDate(n.followUpDate)} {n.followUpDone ? '(done)' : followUpDue ? <Label tone="amber">due</Label> : ''}
-              </p>
+              <div className="flex flex-wrap items-center gap-2 text-slate-600">
+                <span>Follow up {formatDate(n.followUpDate)} {n.followUpDone ? '(done)' : followUpDue ? <Label tone="amber">due</Label> : ''}</span>
+                {!n.followUpDone && <ActionForm action={markFollowUpDone.bind(null, n.id)} submitLabel="Mark done" />}
+              </div>
             )}
             {n.promiseDate && n.promiseAmount !== null && (
               <p className="text-slate-600">
                 Promised {formatMoney(n.promiseAmount)} by {formatDate(n.promiseDate)}
                 {promiseStatus && <span className={`ml-2 font-medium ${promiseStatus === 'Broken' ? 'text-red-700' : promiseStatus === 'Kept' ? 'text-green-700' : ''}`}>{promiseStatus}</span>}
+                {promiseReceived !== null && <span className="ml-2 text-xs">(received {formatMoney(promiseReceived)} since the note)</span>}
               </p>
             )}
           </li>

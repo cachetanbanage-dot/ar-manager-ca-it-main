@@ -123,7 +123,10 @@ async function InvoiceView({ params, searchParams }: Props) {
         </tbody>
       </table>
 
-      <SectionTitle>Notes</SectionTitle>
+      <div className="mt-8 mb-2 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Notes</h2>
+        <ButtonLink href={link(`/notes/new?invoice=${inv.id}`)}>Add note</ButtonLink>
+      </div>
       {d.notes.length === 0 && <p className="text-sm text-slate-500">No notes on this invoice as at {formatDate(asof)}.</p>}
       <ol className="space-y-2">
         {d.notes.map((n) => (
