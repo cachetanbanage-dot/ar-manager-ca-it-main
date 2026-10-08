@@ -4,16 +4,17 @@
 import { useActionState } from 'react';
 import type { ActionState } from '@/lib/validation/common';
 
-export function ActionForm({ action, children, submitLabel, danger, className = '' }: {
+export function ActionForm({ action, children, submitLabel, danger, confirmText, className = '' }: {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   children?: React.ReactNode;
   submitLabel: string;
   danger?: boolean;
+  confirmText?: string; // asks "Are you sure?" first
   className?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, { attempt: 0 });
   return (
-    <form action={formAction} className={className}>
+    <form action={formAction} className={className} onSubmit={(e) => { if (confirmText && !window.confirm(confirmText)) e.preventDefault(); }}>
       <div className="flex flex-wrap items-center gap-2">
         {children}
         <button

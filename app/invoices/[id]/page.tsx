@@ -6,6 +6,7 @@ import { Suspense } from 'react';
 import { ActionForm } from '@/components/ActionForm';
 import { ButtonLink, InvoiceStatusCell, SectionTitle, Td, Th } from '@/components/ui';
 import { cancelInvoice, setInvoiceDisputed, updateInvoiceDescription } from '@/lib/actions/invoices';
+import { removeAllocation } from '@/lib/actions/receipts';
 import { loadArData } from '@/lib/ar/load';
 import { hrefWithAsOf } from '@/lib/asof';
 import { readAsOf } from '@/lib/asof-server';
@@ -90,15 +91,19 @@ async function InvoiceView({ params, searchParams }: Props) {
 
       <SectionTitle>Payments allocated</SectionTitle>
       <table className="w-full text-sm">
-        <thead><tr><Th>Receipt</Th><Th>Receipt date</Th><Th>Allocated on</Th><Th right>Amount</Th></tr></thead>
+        <thead><tr><Th>Receipt</Th><Th>Receipt date</Th><Th>Allocated on</Th><Th right>Amount</Th><Th /></tr></thead>
         <tbody>
           {d.allocations.map(({ allocation: a, receipt }) => (
             <tr key={a.id} className="border-b border-slate-100">
               <Td>{receipt.receiptNo}</Td><Td>{formatDate(receipt.receiptDate)}</Td><Td>{formatDate(a.allocationDate)}</Td>
               <Td right>{formatMoney(a.amount)}</Td>
+              <Td>
+                <ActionForm action={removeAllocation.bind(null, a.id)} submitLabel="Remove" danger
+                  confirmText={`Remove the ${formatMoney(a.amount)} allocation from ${receipt.receiptNo}? It becomes unapplied credit again.`} />
+              </Td>
             </tr>
           ))}
-          {d.allocations.length === 0 && <tr><td colSpan={4} className="py-3 text-slate-500">None as at {formatDate(asof)}.</td></tr>}
+          {d.allocations.length === 0 && <tr><td colSpan={5} className="py-3 text-slate-500">None as at {formatDate(asof)}.</td></tr>}
         </tbody>
       </table>
 

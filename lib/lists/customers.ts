@@ -4,7 +4,8 @@ import { followUpsDue, promiseStatuses, type PromiseStatus } from '@/lib/ar/note
 import {
   customerPositions, invoiceRows, receiptPositions, type CustomerPosition, type InvoiceRow, type ReceiptPosition,
 } from '@/lib/ar/positions';
-import type { ArData, Note } from '@/lib/ar/types';
+import { receiptRemaining } from '@/lib/ar/receipts';
+import type { ArData, Note, Paise } from '@/lib/ar/types';
 import { matchesSearch, sortRows, type SortDir } from '@/lib/sort';
 
 export interface CustomerListRow extends CustomerPosition { usedPct: number | null }
@@ -41,7 +42,7 @@ export interface NoteRow { note: Note; invoiceNo: string | null; followUpDue: bo
 export interface CustomerDetail {
   position: CustomerListRow;
   invoices: InvoiceRow[]; // oldest first
-  receipts: ReceiptPosition[]; // oldest first
+  receipts: (ReceiptPosition & { openAllTime: Paise; hasAllocations: boolean })[]; // oldest first; openAllTime = credit left across all records
   notes: NoteRow[]; // newest first
 }
 
@@ -60,7 +61,12 @@ export function customerDetail(data: ArData, customerId: number, asOf: string): 
       (r) => `${r.invoice.invoiceDate} ${r.invoice.invoiceNo}`, 'asc'),
     receipts: sortRows(
       receiptPositions(data, asOf).filter((r) => r.receipt.customerId === customerId),
-      (r) => `${r.receipt.receiptDate} ${r.receipt.receiptNo}`, 'asc'),
+      (r) => `${r.receipt.receiptDate} ${r.receipt.receiptNo}`, 'asc')
+      .map((r) => ({
+        ...r,
+        openAllTime: receiptRemaining(data, r.receipt.id),
+        hasAllocations: data.allocations.some((a) => a.receiptId === r.receipt.id),
+      })),
     notes: sortRows(
       data.notes.filter((n) => n.customerId === customerId && n.noteDate <= asOf),
       (n) => `${n.noteDate} ${String(n.id).padStart(10, '0')}`, 'desc')

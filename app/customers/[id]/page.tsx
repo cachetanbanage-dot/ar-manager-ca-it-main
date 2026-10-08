@@ -7,6 +7,8 @@ import { ButtonLink, InvoiceStatusCell, Label, SectionTitle, StatusBadge, Td, Th
 import { BUCKETS } from '@/lib/ar/positions';
 import { loadArData } from '@/lib/ar/load';
 import { setCustomerActive } from '@/lib/actions/customers';
+import { deleteReceipt } from '@/lib/actions/receipts';
+import { ActionForm } from '@/components/ActionForm';
 import { hrefWithAsOf } from '@/lib/asof';
 import { readAsOf } from '@/lib/asof-server';
 import { formatBalance, formatDate, formatMoney, formatPct } from '@/lib/format';
@@ -118,7 +120,7 @@ async function CustomerView({ params, searchParams }: Props) {
           <thead>
             <tr>
               <Th>Number</Th><Th>Date</Th><Th>Mode</Th><Th>Reference</Th><Th right>Bank</Th><Th right>TDS</Th>
-              <Th right>Settlement</Th><Th right>Allocated</Th><Th right>Unapplied</Th>
+              <Th right>Settlement</Th><Th right>Allocated</Th><Th right>Unapplied</Th><Th />
             </tr>
           </thead>
           <tbody>
@@ -133,14 +135,26 @@ async function CustomerView({ params, searchParams }: Props) {
                 <Td right>{formatMoney(r.settlement)}</Td>
                 <Td right>{formatMoney(r.allocated)}</Td>
                 <Td right className={r.unapplied > 0 ? 'font-semibold text-blue-800' : ''}>{formatMoney(r.unapplied)}</Td>
+                <Td>
+                  {r.openAllTime > 0 && <Link href={link(`/customers/${c.id}/allocate?receipt=${r.receipt.id}`)} className="text-blue-700 hover:underline">Allocate</Link>}
+                  {!r.hasAllocations && (
+                    <ActionForm action={deleteReceipt.bind(null, r.receipt.id)} submitLabel="Delete" danger
+                      confirmText={`Delete receipt ${r.receipt.receiptNo}? This cannot be undone.`} />
+                  )}
+                </Td>
               </tr>
             ))}
-            {receipts.length === 0 && <tr><td colSpan={9} className="py-4 text-center text-slate-500">No receipts as at {formatDate(asof)}.</td></tr>}
+            {receipts.length === 0 && <tr><td colSpan={10} className="py-4 text-center text-slate-500">No receipts as at {formatDate(asof)}.</td></tr>}
           </tbody>
         </table>
       </div>
       {p.unapplied > 0 && (
-        <p className="mt-2 text-sm text-blue-800">Unapplied credit of {formatMoney(p.unapplied)} is waiting to be allocated.</p>
+        <p className="mt-2 text-sm text-blue-800">
+          Unapplied credit of {formatMoney(p.unapplied)} is waiting to be allocated.{' '}
+          {receipts.some((r) => r.openAllTime > 0)
+            ? <Link href={link(`/customers/${c.id}/allocate`)} className="font-medium underline">Allocate it</Link>
+            : <span className="text-slate-500">(It has since been allocated, after {formatDate(asof)}.)</span>}
+        </p>
       )}
 
       <SectionTitle>Notes</SectionTitle>
