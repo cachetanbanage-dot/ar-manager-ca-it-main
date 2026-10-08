@@ -69,9 +69,12 @@ async function InvoiceList({ searchParams }: { searchParams: SearchParams }) {
         <Link href={hrefWithAsOf('/invoices', keepAsof)} className="px-2 py-1 text-slate-600 hover:underline">Clear</Link>
       </form>
 
-      <p className="mb-2 text-sm text-slate-600">
-        {rows.length} invoice{rows.length === 1 ? '' : 's'} · positions as at {formatDate(asof)} · cancelled invoices are left out of the totals
-      </p>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-slate-600">
+          {rows.length} invoice{rows.length === 1 ? '' : 's'} · positions as at {formatDate(asof)} · cancelled invoices are left out of the totals
+        </p>
+        <a href={buildHref('/invoices/export', { ...filters, sort: o.sort, dir: o.dir })} className="rounded border border-slate-300 bg-white px-3 py-1 text-sm hover:bg-slate-100">Download CSV</a>
+      </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">

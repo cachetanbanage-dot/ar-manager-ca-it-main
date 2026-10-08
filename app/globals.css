@@ -17,3 +17,19 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Print (section 4.12): a clean A4 page; navigation and buttons carry print:hidden */
+@page {
+  size: A4;
+  margin: 15mm;
+}
+
+@media print {
+  body {
+    font-size: 10pt;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+}

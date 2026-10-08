@@ -21,6 +21,12 @@ export function dueDate(invoiceDate: string, creditDays: number): string {
   return addDays(invoiceDate, creditDays);
 }
 
+/** 1 April of the financial year a date falls in, e.g. '2026-08-31' → '2026-04-01', '2026-02-10' → '2025-04-01'. */
+export function fyStart(date: string): string {
+  const [y, m] = date.split('-').map(Number);
+  return `${m >= 4 ? y : y - 1}-04-01`;
+}
+
 /** R4: the Indian financial year (April to March) of a date, e.g. '2026-04-05' → '26-27'. */
 export function fyLabel(date: string): string {
   const [y, m] = date.split('-').map(Number);

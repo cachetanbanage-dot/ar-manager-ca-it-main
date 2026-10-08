@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { ActionForm } from '@/components/ActionForm';
-import { Label, SectionTitle, Td, Th } from '@/components/ui';
+import { Label, Td, Th } from '@/components/ui';
 import { markFollowUpDone } from '@/lib/actions/notes';
 import { loadArData } from '@/lib/ar/load';
 import { BUCKETS } from '@/lib/ar/positions';
@@ -53,7 +53,10 @@ async function Overview({ searchParams }: { searchParams: PageProps<'/'>['search
         <Figure label="Overdue invoices" value={String(s.overdueCount)} tone={s.overdueCount > 0 ? 'red' : undefined} />
       </div>
 
-      <SectionTitle>Ageing by customer</SectionTitle>
+      <div className="mt-8 mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold">Ageing by customer</h2>
+        <a href={buildHref('/ageing/export', { asof: keepAsof })} className="rounded border border-slate-300 bg-white px-3 py-1 text-sm hover:bg-slate-100">Download CSV</a>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
