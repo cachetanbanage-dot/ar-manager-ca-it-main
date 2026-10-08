@@ -12,6 +12,7 @@ const NAV = [
   { href: '/invoices', label: 'Invoices' },
   { href: '/receipts/new', label: 'Record payment' },
   { href: '/statement', label: 'Statement' },
+  { href: '/settings', label: 'Settings' },
 ];
 
 function isActive(pathname: string, href: string): boolean {

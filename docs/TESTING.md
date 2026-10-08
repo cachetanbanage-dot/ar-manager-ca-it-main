@@ -101,6 +101,9 @@ This checks that one posting flows correctly to every screen. Use today's date, 
 | Print | Statement → Print | One clean A4 page: Brightwater's name, the customer, the period, the table and the ageing footer; no menu or buttons |
 | Invoice CSV | Invoices → filter → Download CSV | Only the filtered invoices, with the same totals row as the screen |
 | Ageing CSV | Home → Ageing by customer → Download CSV | The same table with its totals; unapplied credit in its own column |
+| Settings | Settings → set DSO to 60 and buckets ending 15 and 45 → Save | Amber "Custom settings in use" note; home as at 31-Aug-2026 shows Not due · 1-15 · 16-45 · Over 45, DSO 122 days, outstanding still ₹21,18,100.00; C003: 16-45 ₹82,600.00, Over 45 ₹3,64,000.00 |
+| Settings: overlap | Type a bucket limit not bigger than the one before (e.g. 30, 60, 45) | Refused as you type and on Save: "must end after bucket …, or the two would overlap" |
+| Settings: reset | Reset to standard | Standard columns and DSO 111 as at 31-Aug-2026 again; the amber note disappears. **Reset before checking the spot checks** |
 
 ---
 

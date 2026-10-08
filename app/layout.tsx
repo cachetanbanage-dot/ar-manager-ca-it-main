@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Header, HeaderFrame, NavLinks } from "@/components/Header";
+import { SettingsNotice } from "@/components/SettingsNotice";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,6 +30,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* The header reads ?asof= from the URL; the fallback shows while it loads */}
         <Suspense fallback={<HeaderFrame><NavLinks asof={null} pathname="" /></HeaderFrame>}>
           <Header />
+        </Suspense>
+        <Suspense fallback={null}>
+          <SettingsNotice />
         </Suspense>
         <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-6">{children}</main>
       </body>

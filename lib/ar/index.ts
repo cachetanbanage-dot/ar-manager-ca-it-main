@@ -13,3 +13,4 @@ export * from './customers';
 export * from './invoices';
 export * from './dashboard';
 export * from './receipts';
+export * from './settings';

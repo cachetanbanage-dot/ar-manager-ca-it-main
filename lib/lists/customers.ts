@@ -5,6 +5,7 @@ import {
   customerPositions, invoiceRows, receiptPositions, type CustomerPosition, type InvoiceRow, type ReceiptPosition,
 } from '@/lib/ar/positions';
 import { receiptRemaining } from '@/lib/ar/receipts';
+import { DEFAULT_SETTINGS, type ArSettings } from '@/lib/ar/settings';
 import type { ArData, Note, Paise } from '@/lib/ar/types';
 import { matchesSearch, sortRows, type SortDir } from '@/lib/sort';
 
@@ -50,8 +51,10 @@ export interface CustomerDetail {
 }
 
 /** Everything the customer page shows, as at asOf. Null if there is no such customer. */
-export function customerDetail(data: ArData, customerId: number, asOf: string): CustomerDetail | null {
-  const pos = customerPositions(data, asOf).find((p) => p.customer.id === customerId);
+export function customerDetail(
+  data: ArData, customerId: number, asOf: string, settings: ArSettings = DEFAULT_SETTINGS,
+): CustomerDetail | null {
+  const pos = customerPositions(data, asOf, settings).find((p) => p.customer.id === customerId);
   if (!pos) return null;
   const invoiceNo = new Map(data.invoices.map((i) => [i.id, i.invoiceNo]));
   const promises = new Map(promiseStatuses(data, asOf).map((p) => [p.note.id, p]));
@@ -60,7 +63,7 @@ export function customerDetail(data: ArData, customerId: number, asOf: string): 
   return {
     position: { ...pos, usedPct: creditUsedPct(pos.netBalance, pos.customer.creditLimit) },
     invoices: sortRows(
-      invoiceRows(data, asOf).filter((r) => r.invoice.customerId === customerId),
+      invoiceRows(data, asOf, settings).filter((r) => r.invoice.customerId === customerId),
       (r) => `${r.invoice.invoiceDate} ${r.invoice.invoiceNo}`, 'asc'),
     receipts: sortRows(
       receiptPositions(data, asOf).filter((r) => r.receipt.customerId === customerId),

@@ -1,6 +1,7 @@
 // Overdue at a glance (Part 2): the summary figures and the ageing totals.
 import { dso } from './dso';
-import { BUCKETS, customerPositions, invoicePositions, type Bucket, type CustomerPosition } from './positions';
+import { customerPositions, emptyBuckets, invoicePositions, type Bucket, type CustomerPosition } from './positions';
+import { DEFAULT_SETTINGS, bucketLabels, type ArSettings } from './settings';
 import type { ArData, Paise } from './types';
 
 export interface DashboardSummary {
@@ -13,15 +14,15 @@ export interface DashboardSummary {
   overdueCount: number; // invoices with status Overdue
 }
 
-export function dashboardSummary(data: ArData, asOf: string): DashboardSummary {
-  const totals = ageingTotals(customerPositions(data, asOf));
+export function dashboardSummary(data: ArData, asOf: string, settings: ArSettings = DEFAULT_SETTINGS): DashboardSummary {
+  const totals = ageingTotals(customerPositions(data, asOf, settings), settings);
   return {
     outstanding: totals.outstanding,
     unapplied: totals.unapplied,
     netReceivable: totals.netBalance,
     overdue: totals.overdue,
     overduePct: totals.outstanding > 0 ? Math.round((totals.overdue * 1000) / totals.outstanding) / 10 : null,
-    dso: dso(data, asOf),
+    dso: dso(data, asOf, settings.dsoDays),
     overdueCount: invoicePositions(data, asOf).filter((p) => p.status === 'Overdue').length,
   };
 }
@@ -35,13 +36,13 @@ export interface AgeingTotals {
 }
 
 /** R12 + R13: the totals row of the ageing table, adding up customer positions. */
-export function ageingTotals(rows: CustomerPosition[]): AgeingTotals {
+export function ageingTotals(rows: CustomerPosition[], settings: ArSettings = DEFAULT_SETTINGS): AgeingTotals {
   const t: AgeingTotals = {
-    buckets: Object.fromEntries(BUCKETS.map((b) => [b, 0])) as Record<Bucket, Paise>,
+    buckets: emptyBuckets(settings),
     outstanding: 0, unapplied: 0, netBalance: 0, overdue: 0,
   };
   for (const r of rows) {
-    for (const b of BUCKETS) t.buckets[b] += r.buckets[b];
+    for (const b of bucketLabels(settings)) t.buckets[b] += r.buckets[b];
     t.outstanding += r.outstanding;
     t.unapplied += r.unapplied;
     t.netBalance += r.netBalance;

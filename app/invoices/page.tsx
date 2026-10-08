@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { ButtonLink, InvoiceStatusCell, SortTh, Td } from '@/components/ui';
 import { loadArData } from '@/lib/ar/load';
-import { BUCKETS } from '@/lib/ar/positions';
+import { bucketLabels } from '@/lib/ar/settings';
 import { hrefWithAsOf } from '@/lib/asof';
 import { readAsOf } from '@/lib/asof-server';
 import { formatDate, formatMoney } from '@/lib/format';
@@ -14,10 +14,10 @@ import { buildHref } from '@/lib/url';
 type SearchParams = PageProps<'/invoices'>['searchParams'];
 
 async function InvoiceList({ searchParams }: { searchParams: SearchParams }) {
-  const { asof, keepAsof, params } = await readAsOf(searchParams);
-  const o = invoiceListOptions(params);
+  const { asof, keepAsof, params, settings } = await readAsOf(searchParams);
+  const o = invoiceListOptions(params, settings);
   const data = await loadArData();
-  const { rows, totals } = invoiceListRows(data, asof, o);
+  const { rows, totals } = invoiceListRows(data, asof, o, settings);
   const customers = sortRows(data.customers, (c) => c.name, 'asc');
 
   const filters = { q: o.q, customer: o.customer, status: o.status === 'all' ? '' : o.status, bucket: o.bucket,
@@ -48,7 +48,7 @@ async function InvoiceList({ searchParams }: { searchParams: SearchParams }) {
         <label className="flex flex-col"><span className="text-slate-600">Ageing bucket</span>
           <select name="bucket" defaultValue={o.bucket} className={input}>
             <option value="">Any</option>
-            {BUCKETS.map((b) => <option key={b} value={b}>{b}</option>)}
+            {bucketLabels(settings).map((b) => <option key={b} value={b}>{b}</option>)}
           </select>
         </label>
         <label className="flex flex-col"><span className="text-slate-600">Disputed</span>

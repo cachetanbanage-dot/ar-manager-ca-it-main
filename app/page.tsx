@@ -6,7 +6,7 @@ import { ActionForm } from '@/components/ActionForm';
 import { Label, Td, Th } from '@/components/ui';
 import { markFollowUpDone } from '@/lib/actions/notes';
 import { loadArData } from '@/lib/ar/load';
-import { BUCKETS } from '@/lib/ar/positions';
+import { bucketLabels } from '@/lib/ar/settings';
 import { hrefWithAsOf } from '@/lib/asof';
 import { readAsOf } from '@/lib/asof-server';
 import { formatBalance, formatDate, formatMoney } from '@/lib/format';
@@ -34,8 +34,9 @@ function Attention({ title, empty, children, count }: { title: string; empty: st
 }
 
 async function Overview({ searchParams }: { searchParams: PageProps<'/'>['searchParams'] }) {
-  const { asof, keepAsof } = await readAsOf(searchParams);
-  const d = dashboard(await loadArData(), asof);
+  const { asof, keepAsof, settings } = await readAsOf(searchParams);
+  const buckets = bucketLabels(settings);
+  const d = dashboard(await loadArData(), asof, settings);
   const s = d.summary;
   const link = (href: string) => hrefWithAsOf(href, keepAsof);
   const invoicesFor = (customer?: number, bucket?: string) => buildHref('/invoices', { customer, bucket, asof: keepAsof });
@@ -49,7 +50,7 @@ async function Overview({ searchParams }: { searchParams: PageProps<'/'>['search
         <Figure label="Unapplied credit" value={formatMoney(s.unapplied)} tone="blue" />
         <Figure label="Net receivable" value={formatBalance(s.netReceivable)} />
         <Figure label="Overdue" value={formatMoney(s.overdue)} tone="red" note={s.overduePct === null ? undefined : `${s.overduePct}% of outstanding`} />
-        <Figure label="DSO" value={s.dso === null ? '—' : `${s.dso} days`} note="last 90 days' sales" />
+        <Figure label="DSO" value={s.dso === null ? '—' : `${s.dso} days`} note={`last ${settings.dsoDays} days' sales`} />
         <Figure label="Overdue invoices" value={String(s.overdueCount)} tone={s.overdueCount > 0 ? 'red' : undefined} />
       </div>
 
@@ -62,7 +63,7 @@ async function Overview({ searchParams }: { searchParams: PageProps<'/'>['search
           <thead>
             <tr>
               <Th>Customer</Th>
-              {BUCKETS.map((b) => <Th key={b} right>{b}</Th>)}
+              {buckets.map((b) => <Th key={b} right>{b}</Th>)}
               <Th right>Outstanding</Th><Th right>Unapplied credit</Th><Th right>Net balance</Th>
             </tr>
           </thead>
@@ -70,7 +71,7 @@ async function Overview({ searchParams }: { searchParams: PageProps<'/'>['search
             {d.ageing.map((p) => (
               <tr key={p.customer.id} className="border-b border-slate-100 hover:bg-slate-50">
                 <Td><Link href={invoicesFor(p.customer.id)} className="text-blue-700 hover:underline">{p.customer.code} · {p.customer.name}</Link></Td>
-                {BUCKETS.map((b) => (
+                {buckets.map((b) => (
                   <Td key={b} right className={b !== 'Not due' && p.buckets[b] > 0 ? 'text-red-700' : ''}>
                     {p.buckets[b] === 0 ? <span className="text-slate-300">—</span>
                       : <Link href={invoicesFor(p.customer.id, b)} className="hover:underline">{formatMoney(p.buckets[b])}</Link>}
@@ -86,7 +87,7 @@ async function Overview({ searchParams }: { searchParams: PageProps<'/'>['search
           <tfoot>
             <tr className="border-t-2 border-slate-400 font-semibold">
               <Td>Total</Td>
-              {BUCKETS.map((b) => (
+              {buckets.map((b) => (
                 <Td key={b} right>
                   <Link href={invoicesFor(undefined, b)} className="hover:underline">{formatMoney(d.ageingTotals.buckets[b])}</Link>
                 </Td>

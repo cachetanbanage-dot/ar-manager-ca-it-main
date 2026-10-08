@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import { PrintButton } from '@/components/PrintButton';
 import { Td, Th } from '@/components/ui';
 import { loadArData } from '@/lib/ar/load';
-import { BUCKETS } from '@/lib/ar/positions';
+import { bucketLabels } from '@/lib/ar/settings';
 import { statement } from '@/lib/ar/statement';
 import { readAsOf } from '@/lib/asof-server';
 import { formatBalance, formatDate, formatMoney } from '@/lib/format';
@@ -13,11 +13,12 @@ import { sortRows } from '@/lib/sort';
 import { buildHref } from '@/lib/url';
 
 async function StatementView({ searchParams }: { searchParams: PageProps<'/statement'>['searchParams'] }) {
-  const { asof, keepAsof, params } = await readAsOf(searchParams);
+  const { asof, keepAsof, params, settings } = await readAsOf(searchParams);
   const data = await loadArData();
   const o = statementOptions(params, data, asof);
   const customers = sortRows(data.customers, (c) => c.code, 'asc');
-  const s = o.customer && !o.error ? statement(data, o.customer.id, o.from, o.to) : null;
+  const s = o.customer && !o.error ? statement(data, o.customer.id, o.from, o.to, settings) : null;
+  const buckets = bucketLabels(settings);
   const input = 'rounded border border-slate-300 px-2 py-1';
 
   return (
@@ -96,10 +97,10 @@ async function StatementView({ searchParams }: { searchParams: PageProps<'/state
           <section className="mt-6 break-inside-avoid">
             <p className="mb-1 font-semibold">Closing balance by age (days past due date, as at {formatDate(s.to)})</p>
             <table className="w-full">
-              <thead><tr>{BUCKETS.map((b) => <Th key={b} right>{b}</Th>)}<Th right>Unapplied credit</Th></tr></thead>
+              <thead><tr>{buckets.map((b) => <Th key={b} right>{b}</Th>)}<Th right>Unapplied credit</Th></tr></thead>
               <tbody>
                 <tr>
-                  {BUCKETS.map((b) => <Td key={b} right>{formatMoney(s.ageing[b])}</Td>)}
+                  {buckets.map((b) => <Td key={b} right>{formatMoney(s.ageing[b])}</Td>)}
                   <Td right>{s.unapplied > 0 ? `${formatMoney(s.unapplied)} Cr` : formatMoney(0)}</Td>
                 </tr>
               </tbody>

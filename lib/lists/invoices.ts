@@ -1,6 +1,7 @@
 // The invoice list (Part 2): rows from lib/ar, then filter, search and sort.
 import { isValidDate } from '@/lib/asof';
-import { BUCKETS, invoiceRows, invoiceTotals, type Bucket, type InvoiceRow, type InvoiceStatus, type InvoiceTotals } from '@/lib/ar/positions';
+import { invoiceRows, invoiceTotals, type Bucket, type InvoiceRow, type InvoiceStatus, type InvoiceTotals } from '@/lib/ar/positions';
+import { DEFAULT_SETTINGS, bucketLabels, type ArSettings } from '@/lib/ar/settings';
 import type { ArData, Customer } from '@/lib/ar/types';
 import { matchesSearch, sortRows, type SortDir } from '@/lib/sort';
 
@@ -35,9 +36,11 @@ export interface InvoiceListOptions {
   dir: SortDir;
 }
 
-export function invoiceListRows(data: ArData, asOf: string, o: InvoiceListOptions): { rows: InvoiceListRow[]; totals: InvoiceTotals } {
+export function invoiceListRows(
+  data: ArData, asOf: string, o: InvoiceListOptions, settings: ArSettings = DEFAULT_SETTINGS,
+): { rows: InvoiceListRow[]; totals: InvoiceTotals } {
   const customers = new Map(data.customers.map((c) => [c.id, c]));
-  const rows = invoiceRows(data, asOf)
+  const rows = invoiceRows(data, asOf, settings)
     .map((r) => ({ ...r, customer: customers.get(r.invoice.customerId)!, daysLate: r.status === 'Overdue' ? r.daysPastDue : null }))
     .filter((r) =>
       (o.customer === null || r.invoice.customerId === o.customer) &&
@@ -52,7 +55,9 @@ export function invoiceListRows(data: ArData, asOf: string, o: InvoiceListOption
 }
 
 /** Reads list options from the URL, ignoring anything unexpected. */
-export function invoiceListOptions(params: Record<string, string | string[] | undefined>): InvoiceListOptions {
+export function invoiceListOptions(
+  params: Record<string, string | string[] | undefined>, settings: ArSettings = DEFAULT_SETTINGS,
+): InvoiceListOptions {
   const one = (k: string) => (Array.isArray(params[k]) ? params[k][0] : params[k]) ?? '';
   const status = one('status');
   const disputed = one('disputed');
@@ -62,7 +67,7 @@ export function invoiceListOptions(params: Record<string, string | string[] | un
     q: one('q'),
     customer: /^\d+$/.test(one('customer')) ? Number(one('customer')) : null,
     status: (STATUS_FILTERS as readonly string[]).includes(status) ? (status as StatusFilter) : 'all',
-    bucket: (BUCKETS as string[]).includes(one('bucket')) ? (one('bucket') as Bucket) : '',
+    bucket: bucketLabels(settings).includes(one('bucket')) ? (one('bucket') as Bucket) : '',
     disputed: disputed === 'yes' || disputed === 'no' ? disputed : 'all',
     from: date('from'),
     to: date('to'),

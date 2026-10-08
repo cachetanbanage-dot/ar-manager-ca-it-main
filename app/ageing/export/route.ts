@@ -4,11 +4,13 @@ import { parseAsOf } from '@/lib/asof';
 import { csvResponse, toCsv } from '@/lib/csv';
 import { ageingRowsCsv } from '@/lib/exports';
 import { dashboard } from '@/lib/lists/dashboard';
+import { readSettings } from '@/lib/settings-server';
 
 export async function GET(request: Request) {
   const params = Object.fromEntries(new URL(request.url).searchParams);
   const data = await loadArData();
   const asof = parseAsOf(params.asof);
-  const d = dashboard(data, asof);
-  return csvResponse(`Ageing_as_at_${asof}.csv`, toCsv(ageingRowsCsv(d.ageing, d.ageingTotals)));
+  const settings = await readSettings();
+  const d = dashboard(data, asof, settings);
+  return csvResponse(`Ageing_as_at_${asof}.csv`, toCsv(ageingRowsCsv(d.ageing, d.ageingTotals, settings)));
 }

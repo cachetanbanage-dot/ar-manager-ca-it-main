@@ -1,6 +1,7 @@
 // The rows of each CSV export. Figures come from lib/ar; this only lays them out.
 import type { AgeingTotals } from '@/lib/ar/dashboard';
-import { BUCKETS, type CustomerPosition, type InvoiceTotals } from '@/lib/ar/positions';
+import type { CustomerPosition, InvoiceTotals } from '@/lib/ar/positions';
+import { DEFAULT_SETTINGS, bucketLabels, type ArSettings } from '@/lib/ar/settings';
 import type { Statement } from '@/lib/ar/statement';
 import type { Paise } from '@/lib/ar/types';
 import { formatDate, rupeesPlain } from '@/lib/format';
@@ -10,7 +11,7 @@ const drCr = (p: Paise) => (p > 0 ? 'Dr' : p < 0 ? 'Cr' : '');
 const abs = (p: Paise) => rupeesPlain(Math.abs(p));
 
 /** R15: the statement of account as CSV rows. */
-export function statementRows(s: Statement): string[][] {
+export function statementRows(s: Statement, settings: ArSettings = DEFAULT_SETTINGS): string[][] {
   const rows: string[][] = [
     ['Date', 'Document', 'Description', 'Debit', 'Credit', 'Balance', 'Dr/Cr'],
     [formatDate(s.from), '', 'Opening balance', '', '', abs(s.openingBalance), drCr(s.openingBalance)],
@@ -22,7 +23,7 @@ export function statementRows(s: Statement): string[][] {
   rows.push([formatDate(s.to), '', 'Closing balance', '', '', abs(s.closingBalance), drCr(s.closingBalance)]);
   rows.push([]);
   rows.push(['Ageing of the closing balance', '', '', '', '', 'Amount', '']);
-  for (const b of BUCKETS) rows.push([b, '', '', '', '', rupeesPlain(s.ageing[b]), '']);
+  for (const b of bucketLabels(settings)) rows.push([b, '', '', '', '', rupeesPlain(s.ageing[b]), '']);
   rows.push(['Unapplied credit', '', '', '', '', rupeesPlain(s.unapplied), s.unapplied > 0 ? 'Cr' : '']);
   return rows;
 }
@@ -42,14 +43,15 @@ export function invoiceListRowsCsv(rows: InvoiceListRow[], totals: InvoiceTotals
 }
 
 /** R12 + R13: ageing by customer as CSV rows, unapplied credit in its own column, with a totals row. */
-export function ageingRowsCsv(ageing: CustomerPosition[], totals: AgeingTotals): string[][] {
+export function ageingRowsCsv(ageing: CustomerPosition[], totals: AgeingTotals, settings: ArSettings = DEFAULT_SETTINGS): string[][] {
+  const buckets = bucketLabels(settings);
   return [
-    ['Code', 'Customer', ...BUCKETS, 'Outstanding', 'Unapplied credit', 'Net balance', 'Dr/Cr'],
+    ['Code', 'Customer', ...buckets, 'Outstanding', 'Unapplied credit', 'Net balance', 'Dr/Cr'],
     ...ageing.map((p) => [
-      p.customer.code, p.customer.name, ...BUCKETS.map((b) => rupeesPlain(p.buckets[b])),
+      p.customer.code, p.customer.name, ...buckets.map((b) => rupeesPlain(p.buckets[b])),
       rupeesPlain(p.outstanding), rupeesPlain(p.unapplied), abs(p.netBalance), drCr(p.netBalance),
     ]),
-    ['Total', '', ...BUCKETS.map((b) => rupeesPlain(totals.buckets[b])),
+    ['Total', '', ...buckets.map((b) => rupeesPlain(totals.buckets[b])),
       rupeesPlain(totals.outstanding), rupeesPlain(totals.unapplied), abs(totals.netBalance), drCr(totals.netBalance)],
   ];
 }

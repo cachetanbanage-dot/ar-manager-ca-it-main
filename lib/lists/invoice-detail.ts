@@ -2,6 +2,7 @@
 import { cancelBlocker, invoiceRemaining } from '@/lib/ar/invoices';
 import { invoiceRows, type InvoiceRow } from '@/lib/ar/positions';
 import type { Allocation, ArData, CreditNote, Customer, Invoice, Note, Paise, Receipt } from '@/lib/ar/types';
+import { DEFAULT_SETTINGS, type ArSettings } from '@/lib/ar/settings';
 import { sortRows } from '@/lib/sort';
 
 export interface InvoiceDetail {
@@ -16,7 +17,9 @@ export interface InvoiceDetail {
   cancelBlocker: string | null; // why it cannot be cancelled, or null if it can
 }
 
-export function invoiceDetail(data: ArData, invoiceId: number, asOf: string): InvoiceDetail | null {
+export function invoiceDetail(
+  data: ArData, invoiceId: number, asOf: string, settings: ArSettings = DEFAULT_SETTINGS,
+): InvoiceDetail | null {
   const invoice = data.invoices.find((i) => i.id === invoiceId);
   if (!invoice) return null;
   const receipts = new Map(data.receipts.map((r) => [r.id, r]));
@@ -25,7 +28,7 @@ export function invoiceDetail(data: ArData, invoiceId: number, asOf: string): In
 
   return {
     invoice,
-    row: invoiceRows(data, asOf).find((r) => r.invoice.id === invoiceId) ?? null,
+    row: invoiceRows(data, asOf, settings).find((r) => r.invoice.id === invoiceId) ?? null,
     customer: data.customers.find((c) => c.id === invoice.customerId)!,
     allocations: sortRows(allocs.filter((a) => a.allocationDate <= asOf), (a) => `${a.allocationDate} ${a.id}`, 'asc')
       .map((allocation) => ({ allocation, receipt: receipts.get(allocation.receiptId)! })),

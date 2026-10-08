@@ -1,6 +1,7 @@
 // R15: statement of account for one customer, from `from` to `to` (both included).
 import { addDays } from './dates';
 import { balanceByDocuments, customerPositions, type Bucket } from './positions';
+import { DEFAULT_SETTINGS, type ArSettings } from './settings';
 import type { ArData, Customer, Paise } from './types';
 
 export type StatementLineKind = 'invoice' | 'creditNote' | 'receipt' | 'tds';
@@ -29,7 +30,9 @@ export interface Statement {
 // Lines on the same date: invoices, then credit notes, then receipts, then TDS lines
 const KIND_ORDER: Record<StatementLineKind, number> = { invoice: 0, creditNote: 1, receipt: 2, tds: 3 };
 
-export function statement(data: ArData, customerId: number, from: string, to: string): Statement {
+export function statement(
+  data: ArData, customerId: number, from: string, to: string, settings: ArSettings = DEFAULT_SETTINGS,
+): Statement {
   const customer = data.customers.find((c) => c.id === customerId);
   if (!customer) throw new Error(`Unknown customer ${customerId}`);
   const inPeriod = (date: string) => date >= from && date <= to;
@@ -71,7 +74,7 @@ export function statement(data: ArData, customerId: number, from: string, to: st
     return { ...l, balance };
   });
 
-  const position = customerPositions(data, to).find((p) => p.customer.id === customerId)!;
+  const position = customerPositions(data, to, settings).find((p) => p.customer.id === customerId)!;
   return {
     customer, from, to, openingBalance, lines: withBalance, closingBalance: balance,
     ageing: position.buckets, unapplied: position.unapplied,

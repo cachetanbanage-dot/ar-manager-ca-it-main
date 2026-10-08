@@ -1,11 +1,14 @@
 // R10 to R14: positions of invoices, receipts and customers as at a date.
 import { daysBetween } from './dates';
+import { DEFAULT_SETTINGS, bucketForDays, bucketLabels, type ArSettings } from './settings';
 import type { ArData, Customer, Invoice, Paise, Receipt } from './types';
 
 export { daysBetween };
 
-export type Bucket = 'Not due' | '1-30' | '31-60' | '61-90' | '91-180' | 'Over 180';
-export const BUCKETS: Bucket[] = ['Not due', '1-30', '31-60', '61-90', '91-180', 'Over 180'];
+/** An ageing bucket's name, e.g. 'Not due', '1-30', 'Over 180'. The buckets come from the settings. */
+export type Bucket = string;
+/** The brief's buckets (R12), used whenever no other settings are given. */
+export const BUCKETS: Bucket[] = bucketLabels(DEFAULT_SETTINGS);
 
 export interface InvoicePosition {
   invoice: Invoice;
@@ -18,18 +21,16 @@ export interface InvoicePosition {
   bucket: Bucket | null;
 }
 
-/** R12: ageing bucket from days past due (from the due date, not the invoice date). */
-export function bucketFor(daysPastDue: number): Bucket {
-  if (daysPastDue <= 0) return 'Not due';
-  if (daysPastDue <= 30) return '1-30';
-  if (daysPastDue <= 60) return '31-60';
-  if (daysPastDue <= 90) return '61-90';
-  if (daysPastDue <= 180) return '91-180';
-  return 'Over 180';
+/**
+ * R12: ageing bucket from days past due (from the due date, not the invoice date).
+ * With the brief's buckets: 0 or fewer Not due, 1-30, 31-60, 61-90, 91-180, Over 180.
+ */
+export function bucketFor(daysPastDue: number, settings: ArSettings = DEFAULT_SETTINGS): Bucket {
+  return bucketForDays(daysPastDue, settings);
 }
 
 /** R11 + R12: the position of every live invoice at the end of asOf ('YYYY-MM-DD'). */
-export function invoicePositions(data: ArData, asOf: string): InvoicePosition[] {
+export function invoicePositions(data: ArData, asOf: string, settings: ArSettings = DEFAULT_SETTINGS): InvoicePosition[] {
   const received = new Map<number, Paise>();
   for (const a of data.allocations) {
     if (a.allocationDate <= asOf) received.set(a.invoiceId, (received.get(a.invoiceId) ?? 0) + a.amount);
@@ -53,7 +54,7 @@ export function invoicePositions(data: ArData, asOf: string): InvoicePosition[] 
         daysPastDue,
         status: outstanding === 0 ? 'Paid' : daysPastDue >= 1 ? 'Overdue' : 'Due',
         isPartPaid: outstanding > 0 && rec + cred > 0,
-        bucket: outstanding === 0 ? null : bucketFor(daysPastDue),
+        bucket: outstanding === 0 ? null : bucketFor(daysPastDue, settings),
       };
     });
 }
@@ -66,14 +67,14 @@ export interface InvoiceRow extends Omit<InvoicePosition, 'status'> { status: In
  * carry their position; cancelled ones keep their number and show the status
  * Cancelled with nothing received, credited or outstanding.
  */
-export function invoiceRows(data: ArData, asOf: string): InvoiceRow[] {
+export function invoiceRows(data: ArData, asOf: string, settings: ArSettings = DEFAULT_SETTINGS): InvoiceRow[] {
   const cancelled: InvoiceRow[] = data.invoices
     .filter((i) => i.isCancelled && i.invoiceDate <= asOf)
     .map((i) => ({
       invoice: i, received: 0, credited: 0, outstanding: 0,
       daysPastDue: daysBetween(i.dueDate, asOf), status: 'Cancelled', isPartPaid: false, bucket: null,
     }));
-  return [...invoicePositions(data, asOf), ...cancelled];
+  return [...invoicePositions(data, asOf, settings), ...cancelled];
 }
 
 export interface InvoiceTotals { total: Paise; received: Paise; credited: Paise; outstanding: Paise }
@@ -123,18 +124,22 @@ export interface CustomerPosition {
   overLimit: boolean;
 }
 
-const emptyBuckets = (): Record<Bucket, Paise> =>
-  ({ 'Not due': 0, '1-30': 0, '31-60': 0, '61-90': 0, '91-180': 0, 'Over 180': 0 });
+/** A row of zeros, one per bucket: each customer starts here before its invoices are added. */
+export const emptyBuckets = (settings: ArSettings = DEFAULT_SETTINGS): Record<Bucket, Paise> =>
+  Object.fromEntries(bucketLabels(settings).map((b) => [b, 0]));
 
-/** R13: one entry per customer, adding up its invoice and receipt positions. */
-export function customerPositions(data: ArData, asOf: string): CustomerPosition[] {
+/**
+ * R13: one entry per customer, adding up its invoice and receipt positions.
+ * Overdue does not depend on the bucket settings: "Not due" is always 0 days or fewer.
+ */
+export function customerPositions(data: ArData, asOf: string, settings: ArSettings = DEFAULT_SETTINGS): CustomerPosition[] {
   const byCustomer = new Map<number, CustomerPosition>();
   for (const c of data.customers) {
     byCustomer.set(c.id, {
-      customer: c, buckets: emptyBuckets(), outstanding: 0, unapplied: 0, netBalance: 0, overdue: 0, overLimit: false,
+      customer: c, buckets: emptyBuckets(settings), outstanding: 0, unapplied: 0, netBalance: 0, overdue: 0, overLimit: false,
     });
   }
-  for (const p of invoicePositions(data, asOf)) {
+  for (const p of invoicePositions(data, asOf, settings)) {
     const pos = byCustomer.get(p.invoice.customerId)!;
     pos.outstanding += p.outstanding;
     if (p.bucket) pos.buckets[p.bucket] += p.outstanding;

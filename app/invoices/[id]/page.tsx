@@ -16,8 +16,8 @@ import { invoiceDetail } from '@/lib/lists/invoice-detail';
 type Props = PageProps<'/invoices/[id]'>;
 
 async function InvoiceView({ params, searchParams }: Props) {
-  const [{ id }, { asof, keepAsof }] = await Promise.all([params, readAsOf(searchParams)]);
-  const d = invoiceDetail(await loadArData(), Number(id), asof);
+  const [{ id }, { asof, keepAsof, settings }] = await Promise.all([params, readAsOf(searchParams)]);
+  const d = invoiceDetail(await loadArData(), Number(id), asof, settings);
   if (!d) notFound();
   const inv = d.invoice;
   const link = (href: string) => hrefWithAsOf(href, keepAsof);

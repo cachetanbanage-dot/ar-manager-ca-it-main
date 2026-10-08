@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { ButtonLink, InvoiceStatusCell, Label, SectionTitle, StatusBadge, Td, Th } from '@/components/ui';
-import { BUCKETS } from '@/lib/ar/positions';
+import { bucketLabels } from '@/lib/ar/settings';
 import { loadArData } from '@/lib/ar/load';
 import { setCustomerActive } from '@/lib/actions/customers';
 import { markFollowUpDone } from '@/lib/actions/notes';
@@ -18,8 +18,8 @@ import { customerDetail } from '@/lib/lists/customers';
 type Props = PageProps<'/customers/[id]'>;
 
 async function CustomerView({ params, searchParams }: Props) {
-  const [{ id }, { asof, keepAsof }] = await Promise.all([params, readAsOf(searchParams)]);
-  const detail = customerDetail(await loadArData(), Number(id), asof);
+  const [{ id }, { asof, keepAsof, settings }] = await Promise.all([params, readAsOf(searchParams)]);
+  const detail = customerDetail(await loadArData(), Number(id), asof, settings);
   if (!detail) notFound();
 
   const { position: p, invoices, receipts, notes } = detail;
@@ -82,7 +82,7 @@ async function CustomerView({ params, searchParams }: Props) {
             <dt>Credit limit used</dt><dd className="text-right">{formatPct(p.usedPct)}</dd>
           </dl>
           <p className="mt-3 text-xs text-slate-600">
-            {BUCKETS.map((b) => `${b} ${formatMoney(p.buckets[b])}`).join(' · ')}
+            {bucketLabels(settings).map((b) => `${b} ${formatMoney(p.buckets[b])}`).join(' · ')}
           </p>
         </div>
       </div>
