@@ -76,6 +76,21 @@ export function invoiceRows(data: ArData, asOf: string): InvoiceRow[] {
   return [...invoicePositions(data, asOf), ...cancelled];
 }
 
+export interface InvoiceTotals { total: Paise; received: Paise; credited: Paise; outstanding: Paise }
+
+/** Totals of a list of invoice rows. Cancelled invoices are left out of every total (R8). */
+export function invoiceTotals(rows: InvoiceRow[]): InvoiceTotals {
+  const t = { total: 0, received: 0, credited: 0, outstanding: 0 };
+  for (const r of rows) {
+    if (r.status === 'Cancelled') continue;
+    t.total += r.invoice.total;
+    t.received += r.received;
+    t.credited += r.credited;
+    t.outstanding += r.outstanding;
+  }
+  return t;
+}
+
 export interface ReceiptPosition {
   receipt: Receipt;
   settlement: Paise; // R5: bank + TDS
