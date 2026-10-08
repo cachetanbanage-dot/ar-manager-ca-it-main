@@ -112,3 +112,4 @@ This checks that one posting flows correctly to every screen. Use today's date, 
 | Date | Where | Result |
 |---|---|---|
 | 09-Oct-2026 | Live site, straight after a reset (workspace compared with `tests/fixtures/sample.json`: all six tables identical) | Spot checks 1–9 pass on screen (spot check 4 at all three dates); home screen as at 31-Aug-2026 matches section 2; `npm test`: 135 tests pass, including spot check 10 |
+| 09-Oct-2026 | Live site, after the Settings tab was deployed, on standard settings | Spot checks 1–9 and the home screen still pass; the Settings checks in section 5 pass (overlap refused, DSO 122 with 60 days and buckets 15/45, back to DSO 111 after reset); `npm test`: 151 tests pass |
