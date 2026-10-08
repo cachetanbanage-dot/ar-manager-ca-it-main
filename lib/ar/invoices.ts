@@ -1,7 +1,7 @@
 // Rules for changing invoices. These look at every record, whatever its date,
 // because that is what the database enforces (R6, R7, R8).
 import { dueDate } from './dates';
-import { invoiceAmounts, type GstAmounts } from './gst';
+import { creditNoteAmounts, invoiceAmounts, type GstAmounts } from './gst';
 import { nextNumber } from './numbering';
 import { balanceByDocuments } from './positions';
 import type { ArData, Paise } from './types';
@@ -60,7 +60,30 @@ export function cancelBlocker(data: ArData, invoiceId: number): string | null {
       allocations > 0 ? `${allocations} payment allocation${allocations > 1 ? 's' : ''}` : '',
       creditNotes > 0 ? `${creditNotes} credit note${creditNotes > 1 ? 's' : ''}` : '',
     ].filter(Boolean).join(' and ');
-    return `${inv.invoiceNo} cannot be cancelled: it has ${parts} against it. Remove the allocations or raise a credit note instead.`;
+    const advice = creditNotes === 0
+      ? 'Remove the allocations first, or raise a credit note instead.'
+      : 'Credit notes cannot be removed; raise a further credit note for the rest instead.';
+    return `${inv.invoiceNo} cannot be cancelled: it has ${parts} against it. ${advice}`;
   }
   return null;
+}
+
+export interface CreditNotePreview extends GstAmounts {
+  creditNoteNo: string;
+  remaining: Paise; // still open on the invoice across all records, before this credit note
+  exceedsRemaining: boolean; // R7: allocations + credit notes cannot exceed the invoice total
+}
+
+/** R7: a new credit note's number, GST (in the invoice's rate and split) and total, checked against what remains. */
+export function previewCreditNote(data: ArData, invoiceId: number, creditNoteDate: string, taxableValue: Paise): CreditNotePreview {
+  const invoice = data.invoices.find((i) => i.id === invoiceId);
+  if (!invoice) throw new Error(`Unknown invoice ${invoiceId}`);
+  const amounts = creditNoteAmounts(invoice, taxableValue);
+  const remaining = invoiceRemaining(data, invoiceId);
+  return {
+    ...amounts,
+    creditNoteNo: nextNumber('creditNote', data, creditNoteDate),
+    remaining,
+    exceedsRemaining: amounts.total > remaining,
+  };
 }

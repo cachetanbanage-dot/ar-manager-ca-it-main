@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cancelBlocker, invoiceRemaining } from '@/lib/ar/invoices';
 import { invoiceDetail } from '@/lib/lists/invoice-detail';
+import { checkCreditNote } from '@/lib/validation/credit-note';
 import { checkInvoice } from '@/lib/validation/invoice';
 import { sampleData } from './fixture';
 
@@ -29,8 +30,9 @@ describe('cancelBlocker (R8)', () => {
 
   it('refuses when payments or credit notes exist, and says why', () => {
     expect(cancelBlocker(sampleData, inv('BWA/26-27/0007').id))
-      .toBe('BWA/26-27/0007 cannot be cancelled: it has 1 payment allocation and 1 credit note against it. Remove the allocations or raise a credit note instead.');
-    expect(cancelBlocker(sampleData, inv('BWA/26-27/0017').id)).toContain('1 payment allocation');
+      .toBe('BWA/26-27/0007 cannot be cancelled: it has 1 payment allocation and 1 credit note against it. Credit notes cannot be removed; raise a further credit note for the rest instead.');
+    expect(cancelBlocker(sampleData, inv('BWA/26-27/0017').id))
+      .toBe('BWA/26-27/0017 cannot be cancelled: it has 1 payment allocation against it. Remove the allocations first, or raise a credit note instead.');
   });
 
   it('refuses an invoice already cancelled', () => {
@@ -97,5 +99,34 @@ describe('previewInvoice and checkInvoice (R2, R3, R4, R9)', () => {
   it('checks every field', () => {
     const r = checkInvoice({ customerId: '', invoiceDate: '2026-02-30', description: ' ', taxableValue: '0', gstRatePct: '15' }, sampleData);
     expect(!r.ok && Object.keys(r.errors).sort()).toEqual(['customerId', 'description', 'gstRatePct', 'invoiceDate', 'taxableValue']);
+  });
+});
+
+describe('credit notes (R7)', () => {
+  const form = (o: Record<string, string> = {}) => ({ creditNoteDate: '2026-09-01', taxableValue: '2500', reason: 'Bank charges waived', ...o });
+
+  it('uses the invoice’s CGST + SGST split and the next number', () => {
+    const r = checkCreditNote(form(), sampleData, inv('BWA/26-27/0007').id); // 3,000 still open
+    expect(r.ok && r.data.preview).toEqual({
+      cgst: 22500, sgst: 22500, igst: 0, total: 295000, creditNoteNo: 'BWA/CN/26-27/002', remaining: 300000, exceedsRemaining: false,
+    });
+  });
+
+  it('uses IGST for an inter-state invoice', () => {
+    const r = checkCreditNote(form({ taxableValue: '10000' }), sampleData, inv('BWA/26-27/0013').id); // C003, Karnataka
+    expect(r.ok && r.data.preview).toMatchObject({ cgst: 0, sgst: 0, igst: 180000, total: 1180000 });
+  });
+
+  it('refuses more than is still open on the invoice, and says how much is left', () => {
+    const r = checkCreditNote(form({ taxableValue: '3000' }), sampleData, inv('BWA/26-27/0007').id); // 3,540 > 3,000
+    expect(!r.ok && r.errors.taxableValue?.[0])
+      .toBe('The credit note total ₹3,540.00 is more than the ₹3,000.00 still open on BWA/26-27/0007.');
+  });
+
+  it('refuses a date before the invoice, a cancelled invoice, and blank fields', () => {
+    expect(checkCreditNote(form({ creditNoteDate: '2026-05-11' }), sampleData, inv('BWA/26-27/0007').id).ok).toBe(false);
+    expect(checkCreditNote(form(), sampleData, inv('BWA/26-27/0014').id).ok).toBe(false);
+    const r = checkCreditNote({ creditNoteDate: '', taxableValue: '0', reason: '' }, sampleData, inv('BWA/26-27/0007').id);
+    expect(!r.ok && Object.keys(r.errors).sort()).toEqual(['creditNoteDate', 'reason', 'taxableValue']);
   });
 });

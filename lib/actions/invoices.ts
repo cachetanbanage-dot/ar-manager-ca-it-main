@@ -9,6 +9,7 @@ import { asofParam, hrefWithAsOf } from '@/lib/asof';
 import { db } from '@/lib/db';
 import { friendlyDbError } from '@/lib/db-errors';
 import type { ActionState } from '@/lib/validation/common';
+import { CREDIT_NOTE_FIELDS, checkCreditNote, type CreditNoteFormState } from '@/lib/validation/credit-note';
 import { INVOICE_FIELDS, checkInvoice, type InvoiceFormState } from '@/lib/validation/invoice';
 
 const isDuplicate = (message: string) => /duplicate key|unique/i.test(message);
@@ -73,4 +74,27 @@ export async function cancelInvoice(invoiceId: number, prev: ActionState, formDa
   if (blocker) return fail(prev, blocker);
   const error = await update(invoiceId, { is_cancelled: true });
   return error ? fail(prev, error) : done(prev, 'Invoice cancelled. Its number stays used.');
+}
+
+/** R7: raise a credit note against an invoice. Number and GST are worked out again on the server; retries once on a number clash. */
+export async function createCreditNote(invoiceId: number, prev: CreditNoteFormState, formData: FormData): Promise<CreditNoteFormState> {
+  const values = Object.fromEntries(CREDIT_NOTE_FIELDS.map((f) => [f, String(formData.get(f) ?? '')]));
+  const failed = (errors: CreditNoteFormState['errors'], message: string) => ({ values, errors, message, attempt: prev.attempt + 1 });
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const checked = checkCreditNote(values, await loadArData(), invoiceId);
+    if (!checked.ok) return failed(checked.errors, 'Please correct the fields marked in red.');
+    const { preview: p, ...input } = checked.data;
+
+    const { error } = await db.from('credit_notes').insert({
+      credit_note_no: p.creditNoteNo, invoice_id: invoiceId, credit_note_date: input.creditNoteDate,
+      taxable_value: input.taxableValue / 100, cgst: p.cgst / 100, sgst: p.sgst / 100, igst: p.igst / 100,
+      total: p.total / 100, reason: input.reason,
+    });
+    if (!error) break;
+    if (!(isDuplicate(error.message) && attempt === 1)) return failed({}, friendlyDbError(error.message));
+  }
+
+  revalidatePath('/', 'layout');
+  redirect(hrefWithAsOf(`/invoices/${invoiceId}`, asofParam(String(formData.get('asof') ?? ''))));
 }
