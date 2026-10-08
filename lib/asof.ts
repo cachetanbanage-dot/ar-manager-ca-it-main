@@ -19,6 +19,12 @@ export function isValidDate(value: string): boolean {
   return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
 }
 
+/** The ?asof= value from the URL if it is a real date, else undefined (links then default to today). */
+export function asofParam(value: string | string[] | null | undefined): string | undefined {
+  const v = Array.isArray(value) ? value[0] : value;
+  return v && isValidDate(v) ? v : undefined;
+}
+
 /** A link that keeps the as-at date, e.g. hrefWithAsOf('/invoices?customer=3', '2026-08-31'). */
 export function hrefWithAsOf(href: string, asof: string | null | undefined): string {
   if (!asof) return href;

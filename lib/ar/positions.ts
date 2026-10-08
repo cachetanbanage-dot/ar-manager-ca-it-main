@@ -58,6 +58,24 @@ export function invoicePositions(data: ArData, asOf: string): InvoicePosition[] 
     });
 }
 
+export type InvoiceStatus = InvoicePosition['status'] | 'Cancelled';
+export interface InvoiceRow extends Omit<InvoicePosition, 'status'> { status: InvoiceStatus }
+
+/**
+ * R8 + R11: every invoice dated on or before asOf, for listing. Live invoices
+ * carry their position; cancelled ones keep their number and show the status
+ * Cancelled with nothing received, credited or outstanding.
+ */
+export function invoiceRows(data: ArData, asOf: string): InvoiceRow[] {
+  const cancelled: InvoiceRow[] = data.invoices
+    .filter((i) => i.isCancelled && i.invoiceDate <= asOf)
+    .map((i) => ({
+      invoice: i, received: 0, credited: 0, outstanding: 0,
+      daysPastDue: daysBetween(i.dueDate, asOf), status: 'Cancelled', isPartPaid: false, bucket: null,
+    }));
+  return [...invoicePositions(data, asOf), ...cancelled];
+}
+
 export interface ReceiptPosition {
   receipt: Receipt;
   settlement: Paise; // R5: bank + TDS
