@@ -1,4 +1,5 @@
 import 'server-only';
+import { connection } from 'next/server';
 import { db } from '@/lib/db';
 import { toArData, type DbRows } from './rows';
 import type { ArData } from './types';
@@ -9,6 +10,7 @@ import type { ArData } from './types';
  * lib/ar calculates in memory.
  */
 export async function loadArData(): Promise<ArData> {
+  await connection(); // always load at request time, never while Next.js prebuilds a page
   const [customers, invoices, creditNotes, receipts, allocations, notes] = await Promise.all([
     db.from('customers').select('*'),
     db.from('invoices').select('*'),

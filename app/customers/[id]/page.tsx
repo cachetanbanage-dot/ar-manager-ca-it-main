@@ -7,16 +7,15 @@ import { ButtonLink, InvoiceStatusCell, Label, SectionTitle, StatusBadge, Td, Th
 import { BUCKETS } from '@/lib/ar/positions';
 import { loadArData } from '@/lib/ar/load';
 import { setCustomerActive } from '@/lib/actions/customers';
-import { asofParam, hrefWithAsOf, parseAsOf } from '@/lib/asof';
+import { hrefWithAsOf } from '@/lib/asof';
+import { readAsOf } from '@/lib/asof-server';
 import { formatBalance, formatDate, formatMoney, formatPct } from '@/lib/format';
 import { customerDetail } from '@/lib/lists/customers';
 
 type Props = PageProps<'/customers/[id]'>;
 
 async function CustomerView({ params, searchParams }: Props) {
-  const [{ id }, query] = await Promise.all([params, searchParams]);
-  const asof = parseAsOf(query.asof);
-  const keepAsof = asofParam(query.asof);
+  const [{ id }, { asof, keepAsof }] = await Promise.all([params, readAsOf(searchParams)]);
   const detail = customerDetail(await loadArData(), Number(id), asof);
   if (!detail) notFound();
 

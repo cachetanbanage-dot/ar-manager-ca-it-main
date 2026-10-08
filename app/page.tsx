@@ -2,11 +2,11 @@
 // loader and the as-at date work. Replaced by "Overdue at a glance" in step 8.
 import { Suspense } from 'react';
 import { loadArData } from '@/lib/ar/load';
-import { parseAsOf } from '@/lib/asof';
+import { readAsOf } from '@/lib/asof-server';
 import { formatDate } from '@/lib/format';
 
 async function CustomerList({ searchParams }: { searchParams: PageProps<'/'>['searchParams'] }) {
-  const asof = parseAsOf((await searchParams).asof);
+  const { asof } = await readAsOf(searchParams);
   const data = await loadArData();
   const customers = [...data.customers].sort((a, b) => (a.code < b.code ? -1 : 1));
 

@@ -3,15 +3,14 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { ButtonLink, SortTh, StatusBadge, Td } from '@/components/ui';
 import { loadArData } from '@/lib/ar/load';
-import { asofParam, hrefWithAsOf, parseAsOf } from '@/lib/asof';
+import { asofParam, hrefWithAsOf } from '@/lib/asof';
+import { readAsOf } from '@/lib/asof-server';
 import { formatBalance, formatDate, formatMoney, formatPct } from '@/lib/format';
 import { customerListOptions, customerListRows } from '@/lib/lists/customers';
 import { buildHref } from '@/lib/url';
 
 async function CustomerList({ searchParams }: { searchParams: PageProps<'/customers'>['searchParams'] }) {
-  const params = await searchParams;
-  const asof = parseAsOf(params.asof);
-  const keepAsof = asofParam(params.asof);
+  const { asof, keepAsof, params } = await readAsOf(searchParams);
   const opts = customerListOptions(params);
   const rows = customerListRows(await loadArData(), asof, opts);
 
