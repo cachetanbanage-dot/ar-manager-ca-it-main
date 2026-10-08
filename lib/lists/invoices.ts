@@ -1,6 +1,6 @@
 // The invoice list (Part 2): rows from lib/ar, then filter, search and sort.
 import { isValidDate } from '@/lib/asof';
-import { invoiceRows, invoiceTotals, type InvoiceRow, type InvoiceStatus, type InvoiceTotals } from '@/lib/ar/positions';
+import { BUCKETS, invoiceRows, invoiceTotals, type Bucket, type InvoiceRow, type InvoiceStatus, type InvoiceTotals } from '@/lib/ar/positions';
 import type { ArData, Customer } from '@/lib/ar/types';
 import { matchesSearch, sortRows, type SortDir } from '@/lib/sort';
 
@@ -27,6 +27,7 @@ export interface InvoiceListOptions {
   q: string; // part of the invoice number
   customer: number | null;
   status: StatusFilter;
+  bucket: Bucket | ''; // R12 ageing bucket, '' for any
   disputed: 'all' | 'yes' | 'no';
   from: string; // invoice date range, 'YYYY-MM-DD' or ''
   to: string;
@@ -41,6 +42,7 @@ export function invoiceListRows(data: ArData, asOf: string, o: InvoiceListOption
     .filter((r) =>
       (o.customer === null || r.invoice.customerId === o.customer) &&
       (o.status === 'all' || r.status === o.status) &&
+      (o.bucket === '' || r.bucket === o.bucket) &&
       (o.disputed === 'all' || r.invoice.isDisputed === (o.disputed === 'yes')) &&
       (o.from === '' || r.invoice.invoiceDate >= o.from) &&
       (o.to === '' || r.invoice.invoiceDate <= o.to) &&
@@ -60,6 +62,7 @@ export function invoiceListOptions(params: Record<string, string | string[] | un
     q: one('q'),
     customer: /^\d+$/.test(one('customer')) ? Number(one('customer')) : null,
     status: (STATUS_FILTERS as readonly string[]).includes(status) ? (status as StatusFilter) : 'all',
+    bucket: (BUCKETS as string[]).includes(one('bucket')) ? (one('bucket') as Bucket) : '',
     disputed: disputed === 'yes' || disputed === 'no' ? disputed : 'all',
     from: date('from'),
     to: date('to'),

@@ -37,6 +37,13 @@ describe('invoice list', () => {
     expect(nos({ q: '0007' })).toEqual(['0007']);
   });
 
+  it('filters by ageing bucket, for the click-through from the ageing table', () => {
+    const c003 = String(sampleData.customers.find((c) => c.code === 'C003')!.id);
+    expect(nos({ bucket: 'Over 180' })).toEqual(['0141']);
+    expect(nos({ customer: c003, bucket: '91-180' })).toEqual(['0156', '0004']);
+    expect(opts({ bucket: 'nonsense' }).bucket).toBe('');
+  });
+
   it('totals the filtered rows', () => {
     const { totals } = list({ status: 'Due' });
     expect(totals.outstanding).toBe(5900000 + 35400000 + 8850000 + 7080000 + 25960000); // 0018, 0019, 0021, 0022, 0023
@@ -52,7 +59,7 @@ describe('invoice list', () => {
 
   it('reads options from the URL and ignores anything unexpected', () => {
     expect(opts({ status: 'Overdue', disputed: 'yes', customer: '12', from: '2026-04-01', to: 'junk', sort: 'total', dir: 'desc' }))
-      .toEqual({ q: '', customer: 12, status: 'Overdue', disputed: 'yes', from: '2026-04-01', to: '', sort: 'total', dir: 'desc' });
+      .toEqual({ q: '', customer: 12, status: 'Overdue', bucket: '', disputed: 'yes', from: '2026-04-01', to: '', sort: 'total', dir: 'desc' });
     expect(opts({ status: 'deleted', customer: 'x', sort: 'nope' }))
       .toMatchObject({ status: 'all', customer: null, sort: 'date', dir: 'asc' });
   });

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { ButtonLink, InvoiceStatusCell, SortTh, Td } from '@/components/ui';
 import { loadArData } from '@/lib/ar/load';
+import { BUCKETS } from '@/lib/ar/positions';
 import { hrefWithAsOf } from '@/lib/asof';
 import { readAsOf } from '@/lib/asof-server';
 import { formatDate, formatMoney } from '@/lib/format';
@@ -19,7 +20,7 @@ async function InvoiceList({ searchParams }: { searchParams: SearchParams }) {
   const { rows, totals } = invoiceListRows(data, asof, o);
   const customers = sortRows(data.customers, (c) => c.name, 'asc');
 
-  const filters = { q: o.q, customer: o.customer, status: o.status === 'all' ? '' : o.status,
+  const filters = { q: o.q, customer: o.customer, status: o.status === 'all' ? '' : o.status, bucket: o.bucket,
     disputed: o.disputed === 'all' ? '' : o.disputed, from: o.from, to: o.to, asof: keepAsof };
   const sortHref = (sort: string, dir: 'asc' | 'desc') => buildHref('/invoices', { ...filters, sort, dir });
   const th = (label: string, key: string, right?: boolean) => (
@@ -42,6 +43,12 @@ async function InvoiceList({ searchParams }: { searchParams: SearchParams }) {
         <label className="flex flex-col"><span className="text-slate-600">Status</span>
           <select name="status" defaultValue={o.status} className={input}>
             {STATUS_FILTERS.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+          </select>
+        </label>
+        <label className="flex flex-col"><span className="text-slate-600">Ageing bucket</span>
+          <select name="bucket" defaultValue={o.bucket} className={input}>
+            <option value="">Any</option>
+            {BUCKETS.map((b) => <option key={b} value={b}>{b}</option>)}
           </select>
         </label>
         <label className="flex flex-col"><span className="text-slate-600">Disputed</span>
