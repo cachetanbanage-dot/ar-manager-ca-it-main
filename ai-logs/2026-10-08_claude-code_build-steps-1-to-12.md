@@ -1811,3 +1811,58 @@ Found it: this session's transcript. I'll look at how it's structured before con
 - *Ran:* Export the chat log and run privacy checks
 
 </details>
+
+The log is written: 17 of your messages and 17 replies. Your workspace id, your email and the system notes are all absent. It will be pushed to GitHub, so I'll read through it before committing.
+
+<details><summary>Actions taken (2)</summary>
+
+- *Read file:* `ai-logs\2026-10-08_claude-code_build-steps-1-to-11.md`
+- *Ran:* List each user message opening
+
+</details>
+
+Every one of your messages is there, in order. One last privacy sweep for anything that looks like an id or a key:
+
+<details><summary>Actions taken (5)</summary>
+
+- *Ran:* Scan the log for ids, keys and answers
+- *Ran:* Commit and push the AI log
+- *Wrote file:* `docs\TESTING.md`
+- *Read file:* `README.md`
+- *Ran:* List project files for the README
+
+</details>
+
+`components/ComingSoon.tsx` is no longer used now that every placeholder page has been built. I'll confirm that and remove it, then write the README for the reviewers:
+
+<details><summary>Actions taken (2)</summary>
+
+- *Ran:* Remove the unused placeholder component
+- *Wrote file:* `README.md`
+
+</details>
+
+One bullet in Known gaps reads awkwardly. Rewording it:
+
+<details><summary>Actions taken (4)</summary>
+
+- *Edited file:* `README.md`
+- *Ran:* Build, test, commit and push docs
+- *Asked the user:* The final check needs the workspace reset to the original sample data. This deletes all test entries (C099, test invoices, receipt, note, and anything you entered yourself). How do you want to do it?
+- *User answered:* Your questions have been answered: "The final check needs the workspace reset to the original sample data. This deletes all test entries (C099, test invoices, receipt, note, and anything you entered y
+
+</details>
+
+You've authorised the reset, so I'll run it. If a permission prompt appears, please approve it.
+
+<details><summary>Actions taken (7)</summary>
+
+- *Ran:* Reset workspace to original sample data (user approved)
+- *Wrote file:* `scratch test script`
+- *Ran:* Compare live workspace with the original sample data
+- *Wrote file:* `scratch test script`
+- *Ran:* Run all spot checks on the live site
+- *Edited file:* `docs\TESTING.md`
+- *Ran:* Export full AI log, run privacy checks, stage
+
+</details>

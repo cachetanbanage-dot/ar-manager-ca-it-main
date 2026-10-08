@@ -108,4 +108,4 @@ This checks that one posting flows correctly to every screen. Use today's date, 
 
 | Date | Where | Result |
 |---|---|---|
-| (filled in after the final check) | | |
+| 09-Oct-2026 | Live site, straight after a reset (workspace compared with `tests/fixtures/sample.json`: all six tables identical) | Spot checks 1–9 pass on screen (spot check 4 at all three dates); home screen as at 31-Aug-2026 matches section 2; `npm test`: 135 tests pass, including spot check 10 |
