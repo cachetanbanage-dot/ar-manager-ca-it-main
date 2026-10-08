@@ -10,3 +10,4 @@ export * from './statement';
 export * from './notes';
 export * from './dso';
 export * from './customers';
+export * from './invoices';

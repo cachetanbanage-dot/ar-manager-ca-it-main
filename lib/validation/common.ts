@@ -7,6 +7,9 @@ export type FieldErrors = Record<string, string[] | undefined>;
 
 export type FormResult<T> = { ok: true; data: T } | { ok: false; errors: FieldErrors };
 
+/** The result of a simple action (a button or a one-field form), shown under it. */
+export interface ActionState { error?: string; success?: string; attempt: number }
+
 /** Turns a zod failure into field errors. */
 export function toFieldErrors(error: z.ZodError): FieldErrors {
   return z.flattenError(error).fieldErrors as FieldErrors;
