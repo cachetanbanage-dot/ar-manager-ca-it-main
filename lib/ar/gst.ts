@@ -3,6 +3,8 @@ import type { Invoice, Paise } from './types';
 
 export const SELLER_STATE = 'Maharashtra';
 export const DEFAULT_GST_RATE_PCT = 18;
+/** The GST rates offered when raising an invoice. */
+export const GST_RATES = [0, 5, 12, 18, 28, 40] as const;
 
 export interface GstSplit { cgst: Paise; sgst: Paise; igst: Paise }
 export interface GstAmounts extends GstSplit { total: Paise }

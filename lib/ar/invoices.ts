@@ -1,6 +1,39 @@
 // Rules for changing invoices. These look at every record, whatever its date,
 // because that is what the database enforces (R6, R7, R8).
+import { dueDate } from './dates';
+import { invoiceAmounts, type GstAmounts } from './gst';
+import { nextNumber } from './numbering';
+import { balanceByDocuments } from './positions';
 import type { ArData, Paise } from './types';
+
+export interface InvoiceDraft { customerId: number; invoiceDate: string; taxableValue: Paise; gstRatePct: number }
+
+export interface InvoicePreview extends GstAmounts {
+  invoiceNo: string;
+  dueDate: string;
+  balanceBefore: Paise; // the customer's balance across all records, before this invoice
+  balanceAfter: Paise;
+  creditLimit: Paise;
+  overLimit: boolean; // R9: warn, do not block
+}
+
+/** Everything worked out for a new invoice before it is saved: number, due date, GST, total and the credit-limit check. */
+export function previewInvoice(data: ArData, draft: InvoiceDraft): InvoicePreview {
+  const customer = data.customers.find((c) => c.id === draft.customerId);
+  if (!customer) throw new Error(`Unknown customer ${draft.customerId}`);
+  const amounts = invoiceAmounts(customer.state, draft.taxableValue, draft.gstRatePct);
+  const balanceBefore = balanceByDocuments(data, customer.id, '9999-12-31');
+  const balanceAfter = balanceBefore + amounts.total;
+  return {
+    ...amounts,
+    invoiceNo: nextNumber('invoice', data, draft.invoiceDate),
+    dueDate: dueDate(draft.invoiceDate, customer.creditDays),
+    balanceBefore,
+    balanceAfter,
+    creditLimit: customer.creditLimit,
+    overLimit: balanceAfter > customer.creditLimit,
+  };
+}
 
 /**
  * What can still be allocated or credited against an invoice: total − every

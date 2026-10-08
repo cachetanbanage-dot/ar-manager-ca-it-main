@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cancelBlocker, invoiceRemaining } from '@/lib/ar/invoices';
 import { invoiceDetail } from '@/lib/lists/invoice-detail';
+import { checkInvoice } from '@/lib/validation/invoice';
 import { sampleData } from './fixture';
 
 const inv = (no: string) => sampleData.invoices.find((i) => i.invoiceNo === no)!;
@@ -58,5 +59,43 @@ describe('invoice page', () => {
 
   it('has no position before the invoice date', () => {
     expect(invoiceDetail(sampleData, inv('BWA/26-27/0024').id, '2026-08-31')!.row).toBeNull();
+  });
+});
+
+describe('previewInvoice and checkInvoice (R2, R3, R4, R9)', () => {
+  const cust = (code: string) => sampleData.customers.find((c) => c.code === code)!;
+  const form = (o: Record<string, string> = {}) => ({
+    customerId: String(cust('C001').id), invoiceDate: '2026-10-05', description: 'Monthly accounting retainer, Oct',
+    taxableValue: '75,000', gstRatePct: '18', ...o,
+  });
+
+  it('works out number, due date, GST, total and balance for C001', () => {
+    const r = checkInvoice(form(), sampleData);
+    expect(r.ok && r.data.preview).toEqual({
+      invoiceNo: 'BWA/26-27/0025', dueDate: '2026-11-04', cgst: 675000, sgst: 675000, igst: 0, total: 8850000,
+      balanceBefore: 8850000, balanceAfter: 17700000, creditLimit: 50000000, overLimit: false,
+    });
+  });
+
+  it('charges IGST outside Maharashtra and warns (but allows) going over the credit limit', () => {
+    // C003 (Karnataka) owes 4,46,600 against a 4,00,000 limit
+    const r = checkInvoice(form({ customerId: String(cust('C003').id), taxableValue: '10000' }), sampleData);
+    expect(r.ok).toBe(true);
+    expect(r.ok && r.data.preview).toMatchObject({ igst: 180000, total: 1180000, balanceBefore: 44660000, overLimit: true });
+  });
+
+  it('numbers a backdated FY 2025-26 invoice in that year’s series', () => {
+    const r = checkInvoice(form({ invoiceDate: '2026-03-31' }), sampleData);
+    expect(r.ok && r.data.preview.invoiceNo).toBe('BWA/25-26/0172');
+  });
+
+  it('refuses an inactive customer (R9)', () => {
+    const r = checkInvoice(form({ customerId: String(cust('C008').id) }), sampleData);
+    expect(!r.ok && r.errors.customerId?.[0]).toContain('inactive');
+  });
+
+  it('checks every field', () => {
+    const r = checkInvoice({ customerId: '', invoiceDate: '2026-02-30', description: ' ', taxableValue: '0', gstRatePct: '15' }, sampleData);
+    expect(!r.ok && Object.keys(r.errors).sort()).toEqual(['customerId', 'description', 'gstRatePct', 'invoiceDate', 'taxableValue']);
   });
 });
