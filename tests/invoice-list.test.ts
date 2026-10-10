@@ -39,8 +39,10 @@ describe('invoice list', () => {
 
   it('filters by ageing bucket, for the click-through from the ageing table', () => {
     const c003 = String(sampleData.customers.find((c) => c.code === 'C003')!.id);
-    expect(nos({ bucket: 'Over 180' })).toEqual(['0141']);
-    expect(nos({ customer: c003, bucket: '91-180' })).toEqual(['0156', '0004']);
+    const c002 = String(sampleData.customers.find((c) => c.code === 'C002')!.id);
+    expect(nos({ bucket: 'Over 90' })).toEqual(['0141', '0156', '0004']);
+    expect(nos({ customer: c003, bucket: '31-45' })).toEqual(['0013']);
+    expect(nos({ customer: c002, bucket: '46-90' })).toEqual(['0003', '0009']);
     expect(opts({ bucket: 'nonsense' }).bucket).toBe('');
   });
 

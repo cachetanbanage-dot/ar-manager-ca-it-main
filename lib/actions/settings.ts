@@ -20,7 +20,7 @@ export async function saveSettings(prev: SettingsFormState, formData: FormData):
   return { errors: {}, success: 'Settings saved. Every screen and export now uses them in this browser.', attempt: prev.attempt + 1 };
 }
 
-/** Back to the brief's rules: DSO over 90 days and the six standard buckets. */
+/** Back to the standard: DSO over 90 days and the six standard buckets. */
 export async function resetSettings(prev: SettingsFormState): Promise<SettingsFormState> {
   (await cookies()).delete(SETTINGS_COOKIE);
   revalidatePath('/', 'layout');

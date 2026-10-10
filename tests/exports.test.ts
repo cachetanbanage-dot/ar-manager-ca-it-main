@@ -67,7 +67,7 @@ describe('invoice list and ageing CSV', () => {
   it('ageing CSV totals match the dashboard', () => {
     const d = dashboard(sampleData, '2026-08-31');
     const csv = ageingRowsCsv(d.ageing, d.ageingTotals);
-    expect(csv[0]).toEqual(['Code', 'Customer', 'Not due', '1-30', '31-60', '61-90', '91-180', 'Over 180', 'Outstanding', 'Unapplied credit', 'Net balance', 'Dr/Cr']);
-    expect(csv.at(-1)).toEqual(['Total', '', '831900.00', '625400.00', '227200.00', '69600.00', '187000.00', '177000.00', '2118100.00', '100000.00', '2018100.00', 'Dr']);
+    expect(csv[0]).toEqual(['Code', 'Customer', 'Not due', '1-15', '16-30', '31-45', '46-90', 'Over 90', 'Outstanding', 'Unapplied credit', 'Net balance', 'Dr/Cr']);
+    expect(csv.at(-1)).toEqual(['Total', '', '831900.00', '507400.00', '118000.00', '129800.00', '167000.00', '364000.00', '2118100.00', '100000.00', '2018100.00', 'Dr']);
   });
 });

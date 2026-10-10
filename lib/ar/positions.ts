@@ -5,7 +5,7 @@ import type { ArData, Customer, Invoice, Paise, Receipt } from './types';
 
 export { daysBetween };
 
-/** An ageing bucket's name, e.g. 'Not due', '1-30', 'Over 180'. The buckets come from the settings. */
+/** An ageing bucket's name, e.g. 'Not due', '1-15', 'Over 90'. The buckets come from the settings. */
 export type Bucket = string;
 /** The brief's buckets (R12), used whenever no other settings are given. */
 export const BUCKETS: Bucket[] = bucketLabels(DEFAULT_SETTINGS);
@@ -23,7 +23,7 @@ export interface InvoicePosition {
 
 /**
  * R12: ageing bucket from days past due (from the due date, not the invoice date).
- * With the brief's buckets: 0 or fewer Not due, 1-30, 31-60, 61-90, 91-180, Over 180.
+ * With the standard buckets: 0 or fewer Not due, 1-15, 16-30, 31-45, 46-90, Over 90.
  */
 export function bucketFor(daysPastDue: number, settings: ArSettings = DEFAULT_SETTINGS): Bucket {
   return bucketForDays(daysPastDue, settings);

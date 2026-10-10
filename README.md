@@ -14,7 +14,7 @@ what to do about it, correct to the paisa **as at any date** the user picks.
 | **Customers** (`/customers`) | Searchable, filterable, sortable list with balance, overdue and limit used; add and edit with validation; deactivate and reactivate; customer page with profile, one-line ageing, over-limit warning, invoices, receipts, notes timeline and quick actions |
 | **Invoices** (`/invoices`) | List with status, part-paid and disputed labels, filters (customer, status incl. Cancelled, ageing bucket, disputed, date range), search, sort, totals row and CSV; create with a live preview of tax, total, due date, number and credit-limit warning; invoice page with tax breakdown, allocations, credit notes and notes; raise credit note, disputed flag, cancel |
 | **Actions** | Record a payment with TDS pre-fill and an editable oldest-first allocation; allocate unapplied credit; add notes, follow-ups and promises to pay, and mark follow-ups done; statement of account on screen, printed on A4 and as CSV; corrections (remove an allocation, delete a receipt with no allocations, cancel an invoice) |
-| **Settings** (`/settings`) | The DSO period (whole days, 1–365) and the ageing buckets: change any bucket's last day, add or remove buckets (3 to 10 in all). Each bucket starts the day after the previous one ends, and a limit that is not bigger than the one before is refused, so buckets can never overlap. Saved in the browser; **Reset to standard** returns to the brief's rules |
+| **Settings** (`/settings`) | The DSO period (whole days, 1–365) and the ageing buckets: change any bucket's last day, add or remove buckets (3 to 10 in all). Each bucket starts the day after the previous one ends, and a limit that is not bigger than the one before is refused, so buckets can never overlap. Saved in the browser; **Reset to standard** returns to the standard settings |
 
 An **As at** date in the header (kept in the URL as `?asof=2026-08-31`) drives every screen. It defaults to today in India.
 
@@ -114,10 +114,15 @@ Where the brief left a choice open, I decided as follows.
     (31-Aug-2026) and amounts are plain numbers.
 13. **Notes are not edited or deleted.** They are the record of what was said; only a follow-up can be marked done.
 14. **Settings (ageing buckets and DSO period) are remembered per browser, in a cookie.** The database schema is fixed, so
-    there is no table to keep them in. **The defaults are the brief's** (DSO over 90 days; Not due, 1-30, 31-60, 61-90,
-    91-180, Over 180), so anyone without saved settings, including a reviewer, sees exactly the brief's figures. Whenever
-    other settings are in use, an amber note under the header says so. Overdue does not depend on the buckets: "Not due" is
-    always 0 days or fewer. A damaged or hand-edited cookie is ignored and the defaults apply.
+    there is no table to keep them in. Anyone without saved settings sees the standard settings: DSO over 90 days (the
+    brief's) and the buckets in assumption 15. Whenever other settings are in use, an amber note under the header says so.
+    Overdue does not depend on the buckets: "Not due" is always 0 days or fewer. A damaged or hand-edited cookie is ignored
+    and the standard settings apply.
+15. **Ageing buckets changed at the client's request.** The standard buckets are Not due, 1-15, 16-30, 31-45, 46-90 and
+    Over 90, instead of the brief's 1-30, 31-60, 61-90, 91-180 and Over 180 (R12). They are set in one place,
+    `DEFAULT_SETTINGS` in `lib/ar/settings.ts`, which every screen and export reads. Only the split of the outstanding
+    amount into columns changed: outstanding, overdue, status, DSO and balances are the same. The brief's buckets can still
+    be used from the Settings tab (last days 30, 60, 90, 180).
 
 ## Known gaps
 

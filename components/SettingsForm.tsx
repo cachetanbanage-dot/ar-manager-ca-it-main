@@ -113,7 +113,7 @@ export function SettingsForm({ saved, save, reset }: { saved: ArSettings; save: 
 
       <form action={resetAction} className="border-t border-slate-200 pt-4">
         <p className="mb-2 text-sm text-slate-600">
-          Standard (the brief): DSO over {DEFAULT_SETTINGS.dsoDays} days; buckets {bucketLabels(DEFAULT_SETTINGS).join(' · ')}.
+          Standard: DSO over {DEFAULT_SETTINGS.dsoDays} days; buckets {bucketLabels(DEFAULT_SETTINGS).join(' · ')}.
         </p>
         <button disabled={resetting} className="rounded border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-100 disabled:opacity-50">
           {resetting ? 'Resetting…' : 'Reset to standard'}

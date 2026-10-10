@@ -1,5 +1,6 @@
-// User settings for ageing buckets (R12) and DSO (R17). The defaults are the
-// brief's: anyone without saved settings sees exactly the brief's figures.
+// User settings for ageing buckets (R12) and DSO (R17). The standard buckets are
+// the client's (changed from the brief's 30/60/90/180 at their request); the DSO
+// period is the brief's 90 days. Anyone without saved settings sees these.
 //
 // Buckets are described by their upper limits only. "Not due" (0 days or fewer)
 // is always first and "Over N" always last; each bucket starts the day after the
@@ -8,10 +9,10 @@
 
 export interface ArSettings {
   dsoDays: number; // R17: the DSO period in days
-  bucketLimits: number[]; // R12: the last day of each overdue bucket, increasing, e.g. [30, 60, 90, 180]
+  bucketLimits: number[]; // R12: the last day of each overdue bucket, increasing, e.g. [15, 30, 45, 90]
 }
 
-export const DEFAULT_SETTINGS: ArSettings = { dsoDays: 90, bucketLimits: [30, 60, 90, 180] };
+export const DEFAULT_SETTINGS: ArSettings = { dsoDays: 90, bucketLimits: [15, 30, 45, 90] };
 
 export const MAX_BUCKETS = 10; // in total, including "Not due" and "Over N"
 export const MAX_LIMITS = MAX_BUCKETS - 2;
@@ -76,7 +77,7 @@ export function hasProblems(p: SettingsProblems): boolean {
   return Boolean(p.dsoDays || p.buckets || Object.keys(p.limits).length > 0);
 }
 
-/** Settings read back from storage. Anything missing, damaged or invalid gives the brief's defaults. */
+/** Settings read back from storage. Anything missing, damaged or invalid gives the standard settings. */
 export function parseSettings(stored: string | undefined | null): ArSettings {
   if (!stored) return DEFAULT_SETTINGS;
   try {

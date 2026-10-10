@@ -14,10 +14,10 @@ import { sampleData } from './fixture';
 const custom: ArSettings = { dsoDays: 60, bucketLimits: [15, 45] };
 const sum = (r: Record<string, number>) => Object.values(r).reduce((a, b) => a + b, 0);
 
-describe('defaults are the brief (R12, R17)', () => {
-  it('90-day DSO and the six standard buckets', () => {
-    expect(DEFAULT_SETTINGS).toEqual({ dsoDays: 90, bucketLimits: [30, 60, 90, 180] });
-    expect(bucketLabels(DEFAULT_SETTINGS)).toEqual(['Not due', '1-30', '31-60', '61-90', '91-180', 'Over 180']);
+describe('standard settings (R12, R17)', () => {
+  it("90-day DSO and the client's six standard buckets", () => {
+    expect(DEFAULT_SETTINGS).toEqual({ dsoDays: 90, bucketLimits: [15, 30, 45, 90] });
+    expect(bucketLabels(DEFAULT_SETTINGS)).toEqual(['Not due', '1-15', '16-30', '31-45', '46-90', 'Over 90']);
     expect(isDefaultSettings(DEFAULT_SETTINGS)).toBe(true);
     expect(isDefaultSettings(custom)).toBe(false);
   });
@@ -40,7 +40,7 @@ describe('checkSettings: whole numbers and no overlapping buckets', () => {
 
   it('accepts valid settings and returns numbers', () => {
     expect(checkSettings('60', ['15', '45'])).toEqual({ ok: true, data: custom });
-    expect(checkSettings(' 90 ', ['30', '60', '90', '180'])).toEqual({ ok: true, data: DEFAULT_SETTINGS });
+    expect(checkSettings(' 90 ', ['30', '60', '90', '180'])).toEqual({ ok: true, data: { dsoDays: 90, bucketLimits: [30, 60, 90, 180] } }); // the brief's buckets
   });
 
   it('refuses a limit that would overlap the bucket before it', () => {
@@ -71,7 +71,7 @@ describe('checkSettings: whole numbers and no overlapping buckets', () => {
 });
 
 describe('parseSettings: the stored cookie is never trusted blindly', () => {
-  it('missing, damaged or invalid settings give the brief defaults', () => {
+  it('missing, damaged or invalid settings give the standard settings', () => {
     expect(parseSettings(undefined)).toEqual(DEFAULT_SETTINGS);
     expect(parseSettings('not json')).toEqual(DEFAULT_SETTINGS);
     expect(parseSettings('{"dsoDays":60,"bucketLimits":[60,45]}')).toEqual(DEFAULT_SETTINGS); // overlapping, typed by hand
@@ -127,6 +127,6 @@ describe('figures under custom settings', () => {
     expect(ageingRowsCsv(d.ageing, d.ageingTotals, custom)[0])
       .toEqual(['Code', 'Customer', 'Not due', '1-15', '16-45', 'Over 45', 'Outstanding', 'Unapplied credit', 'Net balance', 'Dr/Cr']);
     expect(invoiceListOptions({ bucket: '16-45' }, custom).bucket).toBe('16-45');
-    expect(invoiceListOptions({ bucket: '91-180' }, custom).bucket).toBe(''); // not one of these buckets
+    expect(invoiceListOptions({ bucket: '46-90' }, custom).bucket).toBe(''); // not one of these buckets
   });
 });

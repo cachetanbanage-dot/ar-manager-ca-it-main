@@ -14,22 +14,23 @@ describe('R12: ageing buckets', () => {
   it('puts each boundary day in the right bucket', () => {
     expect(bucketFor(-5)).toBe('Not due');
     expect(bucketFor(0)).toBe('Not due');
-    expect(bucketFor(1)).toBe('1-30');
-    expect(bucketFor(30)).toBe('1-30');
-    expect(bucketFor(31)).toBe('31-60');
-    expect(bucketFor(60)).toBe('31-60');
-    expect(bucketFor(61)).toBe('61-90');
-    expect(bucketFor(90)).toBe('61-90');
-    expect(bucketFor(91)).toBe('91-180');
-    expect(bucketFor(180)).toBe('91-180');
-    expect(bucketFor(181)).toBe('Over 180');
+    expect(bucketFor(1)).toBe('1-15');
+    expect(bucketFor(15)).toBe('1-15');
+    expect(bucketFor(16)).toBe('16-30');
+    expect(bucketFor(30)).toBe('16-30');
+    expect(bucketFor(31)).toBe('31-45');
+    expect(bucketFor(45)).toBe('31-45');
+    expect(bucketFor(46)).toBe('46-90');
+    expect(bucketFor(90)).toBe('46-90');
+    expect(bucketFor(91)).toBe('Over 90');
+    expect(bucketFor(400)).toBe('Over 90');
   });
 });
 
 describe('R11: invoice positions', () => {
   it('spot check 3: BWA/26-27/0003 as at 31-Aug-2026', () => {
     expect(invoiceAt('BWA/26-27/0003', '2026-08-31')).toMatchObject({
-      outstanding: 6960000, status: 'Overdue', isPartPaid: true, daysPastDue: 90, bucket: '61-90',
+      outstanding: 6960000, status: 'Overdue', isPartPaid: true, daysPastDue: 90, bucket: '46-90',
     });
   });
 
@@ -41,7 +42,7 @@ describe('R11: invoice positions', () => {
 
   it('is still Due on its due date (04-Sep for 0021)', () => {
     expect(invoiceAt('BWA/26-27/0021', '2026-09-04')).toMatchObject({ status: 'Due', daysPastDue: 0, bucket: 'Not due' });
-    expect(invoiceAt('BWA/26-27/0021', '2026-09-05')).toMatchObject({ status: 'Overdue', daysPastDue: 1, bucket: '1-30' });
+    expect(invoiceAt('BWA/26-27/0021', '2026-09-05')).toMatchObject({ status: 'Overdue', daysPastDue: 1, bucket: '1-15' });
   });
 
   it('spot check 7: BWA/26-27/0007 as at 31-Aug-2026', () => {

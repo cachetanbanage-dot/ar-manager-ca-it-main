@@ -41,7 +41,7 @@ Set **As at** in the header to the date shown, then look where the table says.
 |---|---|---|---|
 | 1 | any | Invoices → BWA/26-27/0001 | CGST ₹6,750.00 + SGST ₹6,750.00, total ₹88,500.00, due 05-May-2026 |
 | 2 | any | Invoices → BWA/26-27/0002 | IGST ₹63,000.00, total ₹4,13,000.00 |
-| 3 | 31-Aug-2026 | Invoices → BWA/26-27/0003 | Outstanding ₹69,600.00, Overdue, part-paid, 90 days late, bucket 61-90 |
+| 3 | 31-Aug-2026 | Invoices → BWA/26-27/0003 | Outstanding ₹69,600.00, Overdue, part-paid, 90 days late, bucket 46-90 (61-90 under the brief's buckets) |
 | 4 | 31-Aug / 06-Sep / 15-Sep-2026 | Invoices → BWA/26-27/0021 | Due ₹88,500.00 / Overdue 2 days, ₹88,500.00 / Paid |
 | 5 | 31-Aug-2026 | Customers → C005 | Outstanding ₹1,88,800.00, unapplied ₹1,00,000.00, balance ₹88,800.00 Dr |
 | 6 | 12-Jul-2026 | Customers → C005 | Balance ₹1,00,000.00 **Cr** |
@@ -103,7 +103,7 @@ This checks that one posting flows correctly to every screen. Use today's date, 
 | Ageing CSV | Home → Ageing by customer → Download CSV | The same table with its totals; unapplied credit in its own column |
 | Settings | Settings → set DSO to 60 and buckets ending 15 and 45 → Save | Amber "Custom settings in use" note; home as at 31-Aug-2026 shows Not due · 1-15 · 16-45 · Over 45, DSO 122 days, outstanding still ₹21,18,100.00; C003: 16-45 ₹82,600.00, Over 45 ₹3,64,000.00 |
 | Settings: overlap | Type a bucket limit not bigger than the one before (e.g. 30, 60, 45) | Refused as you type and on Save: "must end after bucket …, or the two would overlap" |
-| Settings: reset | Reset to standard | Standard columns and DSO 111 as at 31-Aug-2026 again; the amber note disappears. **Reset before checking the spot checks** |
+| Settings: reset | Reset to standard | Standard columns (Not due · 1-15 · 16-30 · 31-45 · 46-90 · Over 90) and DSO 111 as at 31-Aug-2026 again; the amber note disappears. **Reset before checking the spot checks** |
 
 ---
 
